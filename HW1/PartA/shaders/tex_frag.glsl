@@ -16,7 +16,7 @@ uniform vec3 light3_diffuse;
 
 uniform vec3 light1_specular;
 uniform vec3 light2_specular;
-uniform vec3 light3_diffuse;
+uniform vec3 light3_specular;
 
 void main() {
    vec4 outColor1 = vec4(0.0);
