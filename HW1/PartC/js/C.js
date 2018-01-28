@@ -73,7 +73,7 @@ function FBO_setup() {
          fragmentShader: frag,
       });
       // define meshes which assigns a material to each geometry,
-      bufferGeometry = new THREE.PlaneBufferGeometry(1000, 1000);
+      bufferGeometry = new THREE.PlaneBufferGeometry(4000, 4000);
       bufferMesh = new THREE.Mesh(bufferGeometry, bufferMaterial);
       bufferScene.add(bufferMesh);
 
