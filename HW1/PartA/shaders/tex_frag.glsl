@@ -5,21 +5,24 @@ uniform sampler2D t1;
 
 varying vec2 UV;
 
-varying vec3 V, N, L1, L2;
+varying vec3 V, N, L1, L2, L3;
 float spec_intensity = 32.0; //higher value indicates more rapid falloff
 
 uniform vec3 ambient; //general ambient light in the scene applied to all objects
 
 uniform vec3 light1_diffuse;
 uniform vec3 light2_diffuse;
+uniform vec3 light3_diffuse;
 
 uniform vec3 light1_specular;
 uniform vec3 light2_specular;
+uniform vec3 light3_diffuse;
 
 void main() {
    vec4 outColor1 = vec4(0.0);
    vec4 outColor2 = vec4(0.0);
-   vec4 outColor3 = texture2D(t1, UV);
+   vec4 outColor3 = vec4(0.0);
+   vec4 outColor4 = texture2D(t1, UV);
 
    //diffuse light depends on the angle between the light and the vertex normal
    float diff1 = max(0.0, dot(N, L1)); //just to make sure not negative
@@ -44,7 +47,6 @@ void main() {
 
    //specular
    vec3 R2 = normalize(reflect(-L2,N));
-
    float spec2 = pow( max(dot(R2, V), 0.0), spec_intensity);
    color2 += spec2 * light2_specular;
    if (spec2 > 1.0) {
@@ -53,5 +55,20 @@ void main() {
          outColor2 = clamp(vec4(color2,1.0), 0.0,1.0);
    }
 
-   gl_FragColor = clamp(vec4(ambient, 1.0) + outColor1 + outColor2 + outColor3, 0.0, 1.0); //add the three lights together, make sure final value is between 0.0 and 1.0
+   //diffuse
+   float diff3 = max(0.0, dot(N, L3));
+   vec3 color3 = diff3 * light3_diffuse;
+
+
+   //specular
+   vec3 R3 = normalize(reflect(-L3,N));
+   float spec3 = pow( max(dot(R3, V), 0.0), spec_intensity);
+   color3 += spec3 * light3_specular;
+   if (spec3 > 1.0) {
+         outColor3 = vec4(light3_specular,1.0);
+   } else {
+         outColor3 = clamp(vec4(color3,1.0), 0.0,1.0);
+   }
+
+   gl_FragColor = clamp(vec4(ambient, 1.0) + outColor1 + outColor2 + outColor3 + outColor4, 0.0, 1.0); //add the three lights together, make sure final value is between 0.0 and 1.0
 }
