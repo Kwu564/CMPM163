@@ -11,6 +11,7 @@ attribute vec2 uv;
 // link variables between the vertex shader and the fragment shader
 uniform vec3 light1_pos;
 uniform vec3 light2_pos;
+uniform vec3 light3_pos;
 
 // provides an interface between the vertex and fragment shaders
 varying vec3 N, L1, L2, V;
@@ -33,10 +34,12 @@ void main() {
    // we want to put them in camera coordinates too
    vec4 L1_cam = viewMatrix * vec4(light1_pos, 1.0);
    vec4 L2_cam = viewMatrix * vec4(light2_pos, 1.0);
+   vec4 L3_cam = viewMatrix * vec4(light3_pos, 1.0);
 
    // get the normalized vectors from each light position to the vertex positions
    L1 = vec3(normalize(L1_cam - position).xyz);
    L2 = vec3(normalize(L2_cam - position).xyz);
+   L1 = vec3(normalize(L3_cam - position).xyz);
 
    // reverse direction of position vector to get view vector from vertex to camera
    V = normalize(-P);

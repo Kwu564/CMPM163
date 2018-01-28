@@ -67,5 +67,5 @@ void main() {
          outColor3 = clamp(vec4(color3, 1.0), 0.0, 1.0);
    }
 
-   gl_FragColor = clamp(vec4(ambient, 1.0) + outColor1 + outColor2 + outColor3, 0.0, 1.0); //add the two lights together, make sure final value is between 0.0 and 1.0
+   gl_FragColor = clamp(vec4(ambient, 1.0) + outColor1 + outColor2 + outColor3, 0.0, 1.0); //add the three lights together, make sure final value is between 0.0 and 1.0
 }
