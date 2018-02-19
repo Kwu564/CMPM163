@@ -1,12 +1,15 @@
-HW1 by Kevin Wu for CMPM163
+HW2 by Kevin Wu for CMPM163
 
 Important notes:
-Part A includes three rotating 3d objects, each one has its own shaders.
-It also has three moving colored lights as well.
+Part A includes a plane displaced representing terrain and
+water displaced by its own height map. The water's shaders mixes
+an ocean texture with an environment map. The water's reflectivity
+can be controlled via the gui. Additionally, the terrain displacement
+and water strength can be controlled via gui.
 
-Part B blurs a grayscale image using Guassian 3x3 kernel. Sliding the
-mouse left and wise adjusts the blur strength.
-
-Part C uses the alternative option of placing the game of life on an object.
-In my case I project the game of life scene as a texture on each side of a
-3d cube.
+Part B uses a fire sprite I found online for the particle system. Various
+controls for this system can be found in the gui such as the particle size, lifetime
+and turbulence. The jaguar uses a Perlin noise function which modifies its vertices to make it 
+look as if its breaking apart. I have also added an environment map into the same shader and
+mixed it with colors being effected by the noise function to give the jaguar an almost
+ethereal appearence.
