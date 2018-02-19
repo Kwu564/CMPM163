@@ -1,6 +1,8 @@
 HW2 by Kevin Wu for CMPM163
 
 Important notes:
+Both parts can be navigated via mouse controls(orbit).
+
 Part A includes a plane displaced representing terrain and
 water displaced by its own height map. The water's shaders mixes
 an ocean texture with an environment map. The water's reflectivity
