@@ -1,0 +1,192 @@
+<html>
+<head>
+   <meta charset="utf-8">
+      <script src="../framework/three.min.js"></script>
+      <script src="fonts/OpenSans-Regular.json"></script>
+      <script src="js/OrbitControls.js"></script>
+      <script src="shaders/sdfVS.js"></script>
+      <script src="shaders/sdfFS.js"></script>
+   </head>
+<body>
+
+<div id="container"></div>
+
+<script type="text/javascript">
+var container;
+var camera, scene, renderer;
+
+var input;
+var geometry;
+var material;
+var texture;
+var mesh;
+
+var pen;
+
+var scale = 26;
+var buffer = 0.2;
+var angle = 0.0;
+var translateX = 0.0;
+var gamma = 0.5;
+
+var str = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUu";
+
+// load texture atlas
+texture = new THREE.TextureLoader().load('fonts/OpenSans-Regular.png');
+// when a texel covers more than one pixel
+texture.magFilter = THREE.LinearFilter;
+// when a texel covers less than one pixel
+texture.minFilter = THREE.LinearFilter;
+
+init();
+animate();
+
+function init() {
+   container = document.getElementById('container');
+   camera = new THREE.PerspectiveCamera( 60.0, window.innerWidth / window.innerHeight, 0.1, 50 );
+   camera.position.z = 4;
+   scene = new THREE.Scene();
+
+   var controls = new THREE.OrbitControls(camera);
+   controls.update();
+
+   geometry = new THREE.BufferGeometry();
+
+   var vertexElem, textureElem;
+   // itemSize = 3 because there are 3 values(components) per vertex
+   geometry.addAttribute('position', new THREE.BufferAttribute(vertexElem, 3));
+   geometry.addAttribute('texCoords', new THREE.BufferAttribute(textureElem, 2));
+
+   // materials (ie, linking to the shader program)
+   input = {
+      t1: {type: "t", value: texture},
+      u_color: {type: "v4", value: new THREE.Vector4(1.0, 0.0, 0.0, 1.0)},
+      u_buffer: {type: "f", value: buffer},
+      u_gamma: {type: "f", value: gamma},
+      texsize: {type: "v2", value: new THREE.Vector2(window.innerWidth, window.innerHeight)}
+   };
+
+   material = new THREE.RawShaderMaterial({
+      uniforms: input,
+      vertexShader: sdf_vs,
+      fragmentShader: sdf_fs,
+      depthTest: false,
+      transparent: true
+   });
+
+   mesh = new THREE.Mesh(geometry, material);
+   mesh.position.set(0.0, 0.0, 0.0);
+   mesh.material.side = THREE.DoubleSide;
+   //mesh.material.wireframe = true;
+   scene.add(mesh);
+
+   geometry.attributes.position.needsUpdate = true;
+   geometry.attributes.texCoords.needsUpdate = true;
+
+   renderer = new THREE.WebGLRenderer();
+   renderer.setClearColor( 0x999999 );
+   renderer.setSize( window.innerWidth, window.innerHeight );
+   container.appendChild( renderer.domElement );
+   window.addEventListener( 'resize', onWindowResize, false );
+}
+
+function animate() {
+   requestAnimationFrame(animate);
+   render();
+}
+
+function render() {
+   createText(scale);
+   renderer.render(scene, camera);
+}
+
+//var scale = 64;
+
+function drawGlyph(chr, pen, size, vertexElements, textureElements) {
+   var metric = metrics.chars[chr];
+   if (!metric) return;
+
+   var scale = size / metrics.size;
+   var factor = 1;
+
+   var width = metric[0];
+   var height = metric[1];
+   var horiBearingX = metric[2];
+   var horiBearingY = metric[3];
+   var horiAdvance = metric[4];
+   var posX = metric[5];
+   var posY = metric[6];
+
+   if (width > 0 && height > 0) {
+      width += metrics.buffer * 2;
+      height += metrics.buffer * 2;
+
+
+      // Add a quad (= two triangles) per glyph.
+      vertexElements = new Float32Array ([
+         (factor * (pen.x + ((horiBearingX - metrics.buffer) * scale))), (factor * (pen.y - horiBearingY * scale)), 0.0,
+         (factor * (pen.x + ((horiBearingX - metrics.buffer + width) * scale))), (factor * (pen.y - horiBearingY * scale)), 0.0,
+         (factor * (pen.x + ((horiBearingX - metrics.buffer) * scale))), (factor * (pen.y + (height - horiBearingY) * scale)), 0.0,
+
+         (factor * (pen.x + ((horiBearingX - metrics.buffer + width) * scale))), (factor * (pen.y - horiBearingY * scale)), 0.0,
+         (factor * (pen.x + ((horiBearingX - metrics.buffer) * scale))), (factor * (pen.y + (height - horiBearingY) * scale)), 0.0,
+         (factor * (pen.x + ((horiBearingX - metrics.buffer + width) * scale))), (factor * (pen.y + (height - horiBearingY) * scale)), 0.0         
+      ]);
+      // Define which part of image atlas should we use
+      textureElements = new Float32Array([
+         posX, posY,
+         posX + width, posY,
+         posX, posY + height,
+
+         posX + width, posY,
+         posX, posY + height,
+         posX + width, posY + height
+      ]);
+
+      mesh.geometry.attributes.position.array = vertexElements;
+      mesh.geometry.attributes.texCoords.array = textureElements;
+      //console.log(mesh.geometry.attributes);
+   }
+
+   // pen.x += Math.ceil(horiAdvance * scale);
+   pen.x = pen.x + horiAdvance * scale;
+}
+
+function measureText(text, size) {
+   var dimensions = {
+     advance: 0
+   }
+
+   var scale = size / metrics.size;
+   for (var i = 0; i < text.length; i++) {
+     var horiAdvance = metrics.chars[text[i]][4];
+     dimensions.advance += horiAdvance * scale;
+   }
+
+   return dimensions;
+}
+
+function createText(size) {
+   var vertexElements = [];
+   var textureElements = [];
+   var dimensions = measureText(str, size);
+
+   pen = { x: window.innerWidth / 2 - dimensions.advance / 2, y: window.innerHeight / 2 };
+   for (var i = 0; i < str.length; i++) {
+     var chr = str[i];
+     drawGlyph(chr, pen, size, vertexElements, textureElements);
+   }
+}
+
+function onWindowResize( event ) {
+
+   camera.aspect = window.innerWidth / window.innerHeight;
+   camera.updateProjectionMatrix();
+
+   renderer.setSize( window.innerWidth, window.innerHeight );
+
+}
+
+</script>
+</body>
+</html>
